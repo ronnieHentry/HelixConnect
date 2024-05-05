@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { View, StyleSheet, Text } from "react-native";
 import { TextInput, Button, RadioButton } from "react-native-paper";
 import { MONTHS, getYears } from "../../../utils/constants";
-import Dropdown from "../Dropdown";
+import Dropdown from "../Dropdown/Dropdown";
+import Notification from "../Notification/Notification";
 
 const PaymentForm = () => {
   const [admissionNo, setAdmissionNo] = useState("");
@@ -10,18 +11,35 @@ const PaymentForm = () => {
   const [selectedYear, setSelectedYear] = useState(getYears()[1]);
   const [planType, setPlanType] = useState("standard");
   const [amount, setAmount] = useState("");
+  const [invalidFields, setInvalidFields] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
 
-  const handleMonthChange = (selectedItem, index) => {
-    setSelectedMonth(selectedItem.value);
+  const handleMonthChange = (selectedItem) => {
+    setSelectedMonth(selectedItem);
   };
 
-  const handleYearChange = (selectedItem, index) => {
-    setSelectedYear(selectedItem.value);
+  const handleYearChange = (selectedItem) => {
+    setSelectedYear(selectedItem);
   };
 
   const handleSubmit = () => {
-    // Handle form submission (e.g., send acknowledgment)
-    console.log("Form submitted");
+    if (
+      !admissionNo ||
+      !selectedMonth ||
+      !selectedYear ||
+      !planType ||
+      !amount
+    ) {
+      setInvalidFields(true);
+      setNotificationMessage("Please enter all details");
+      setShowNotification(true);
+    } else {
+      setInvalidFields(false);
+      setNotificationMessage("Acknowledgement sent successfully!");
+      setShowNotification(true);
+      console.log(admissionNo, selectedMonth, selectedYear, planType, amount);
+    }
   };
 
   return (
@@ -31,11 +49,13 @@ const PaymentForm = () => {
         label="Admission Number"
         value={admissionNo}
         onChangeText={setAdmissionNo}
+        keyboardType="numeric"
       />
-      <View style={styles.radioContainer}>
+      <View>
         <RadioButton.Group
           onValueChange={(newValue) => setPlanType(newValue)}
           value={planType}
+          style={styles.radioContainer}
         >
           <View style={styles.radioButton}>
             <RadioButton.Item
@@ -86,13 +106,21 @@ const PaymentForm = () => {
       >
         Send Acknowledgment
       </Button>
+      {showNotification && (
+        <Notification
+          type={invalidFields ? "error" : "success"}
+          message={notificationMessage}
+        />
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    height: "90%",
+    width: "90%",
+    padding: 10,
     flex: 1,
     justifyContent: "center",
   },
@@ -102,10 +130,7 @@ const styles = StyleSheet.create({
   radioContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 15,
-  },
-  radioButton: {
-    marginRight: 20,
+    marginBottom: 10,
   },
   radioLabel: {
     fontSize: 16,

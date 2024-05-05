@@ -10,7 +10,6 @@ export default function App() {
       <View style={styles.container}>
         <PaymentForm />
         <StatusBar style="auto" />
-        {"HELLOO"}
       </View>
     </PaperProvider>
   );
