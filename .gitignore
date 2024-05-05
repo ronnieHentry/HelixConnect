@@ -1,0 +1,13 @@
+# Ignore node_modules folders
+HelixConnect/node_modules/
+Backend/node_modules/
+node_modules/
+
+# Ignore environment variables file
+Backend/.env
+
+# Expo specific files and folders
+HelixConnect/.expo/
+HelixConnect/.expo-shared/
+HelixConnect/.cache/
+
