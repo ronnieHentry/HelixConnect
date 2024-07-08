@@ -1,18 +1,21 @@
-// server.js
 const express = require("express");
+const bodyParser = require("body-parser");
 require("dotenv").config();
+const axios = require("axios");
 const app = express();
 const port = process.env.PORT || 3000;
 const mongodbUri = process.env.MONGODB_URI;
 const mongoose = require("mongoose");
+const { MongoClient } = require("mongodb");
 const bcrypt = require("bcryptjs");
 const User = require("././src/models/User");
+const Member = require("././src/models/Member");
+const token = process.env.WHATSAPP_CLOUD_API_TOKEN;
+const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("Welcome to my first app!!");
-});
+app.use(bodyParser.json());
 
 mongoose
   .connect(mongodbUri, {
@@ -25,6 +28,49 @@ mongoose
   .catch((err) => {
     console.error("Error connecting to MongoDB:", err);
   });
+
+const client = new MongoClient(mongodbUri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+const sendWhatsAppMessage = async (phoneNumber, messageBody) => {
+  try {
+    const response = await axios.post(
+      `https://graph.facebook.com/v13.0/${phoneNumberId}/messages`,
+      {
+        messaging_product: "whatsapp",
+        to: phoneNumber,
+        type: "text",
+        text: { body: messageBody },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log(response.data);
+  } catch (error) {
+    console.error(
+      "Error sending message:",
+      error.response ? error.response.data : error.message
+    );
+  }
+};
+
+app.get("/", (req, res) => {
+  try {
+    const messageBody = `hello_world`;
+
+    sendWhatsAppMessage("+919961114880", messageBody);
+
+    res.send("Message sent successfully!");
+  } catch (error) {
+    res.send(error);
+  }
+});
 
 app.post("/register", async (req, res) => {
   try {
@@ -47,11 +93,20 @@ app.post("/register", async (req, res) => {
   }
 });
 
+app.get("/members/:admissionNumber", async (req, res) => {
+  try {
+    const admissionNumber = req.params.admissionNumber;
+    const member = await Member.findOne({ admissionNumber });
+    console.log(member);
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+    res.send(member);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
-
-// UserName: ronniehentry
-// Pass: 9K49VywkgN25qjFR
-
-// mongodb+srv://ronniehentry:9K49VywkgN25qjFR@mycluster.tqirnsb.mongodb.net/
